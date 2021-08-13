@@ -266,16 +266,16 @@ func gceEventCheckOperation(data []byte, ctx context.Context) (result string, er
 					} else {
 						dns_record = dnsCreateInfo.DnsHostName
 					}
-					result = fmt.Sprintf("%v's DNS record: %v is created\n", logMessage.ProtoPayload.ResourceName, dns_record)
+					result = fmt.Sprintf("%v's DNS record: %v is created with IP: %v\n", logMessage.ProtoPayload.ResourceName, dns_record, ips)
 				} else {
 					result = fmt.Sprintf("%v's DNS record: %v is not created\n", logMessage.ProtoPayload.ResourceName, dns_record)
 				}
-			} else if default_mode { //can be removed TBD.
+			} else if default_mode { // Default mode ignores VM labels and forces to use the default Zone/Domain values set by the DNS/Admin team.
 				dnsCreateInfo := DnsInfo{
-					DnsHostName:        labels["dns_host_name"],
-					DnsZoneName:        labels["dns_zone_name"],
-					DnsZoneHostProject: labels["dns_zone_host_project"],
-					DnsDomain:          labels["dns_domain"],
+					DnsHostName:        vm_name,
+					DnsZoneName:        defaultDnsZone,
+					DnsZoneHostProject: defaultDnsHostProject,
+					DnsDomain:          defaultDnsDomain,
 					Action:             "create",
 					IPs:                ips,
 					VMName:             vm_name,
@@ -283,7 +283,7 @@ func gceEventCheckOperation(data []byte, ctx context.Context) (result string, er
 				}
 				// Default mode creates DNS records based on VM names
 				if dnsManagement(dnsCreateInfo) {
-					result = fmt.Sprintf("%v's DNS record: %v is created\n", logMessage.ProtoPayload.ResourceName, dnsCreateInfo.VMName)
+					result = fmt.Sprintf("%v's DNS record: %v is created with IP: %v\n", logMessage.ProtoPayload.ResourceName, dnsCreateInfo.VMName, ips)
 				} else {
 					result = fmt.Sprintf("%v's DNS record: %v is not created\n", logMessage.ProtoPayload.ResourceName, dnsCreateInfo.VMName)
 				}
@@ -310,7 +310,7 @@ func gceEventCheckOperation(data []byte, ctx context.Context) (result string, er
 				}
 
 				if dnsManagement(dnsDeleteInfo) {
-					result = fmt.Sprintf("%qs DNS record: %q is deleted\n", logMessage.ProtoPayload.ResourceName, dns_record)
+					result = fmt.Sprintf("%qs DNS record: %q is deleted for IP: %v\n", logMessage.ProtoPayload.ResourceName, dns_record, ips)
 				} else {
 					result = fmt.Sprintf("%qs DNS record: %q is not deleted\n", logMessage.ProtoPayload.ResourceName, dns_record)
 				}

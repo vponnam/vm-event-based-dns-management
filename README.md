@@ -2,18 +2,14 @@
 Automatically manage DNS records based on your GCE VM lifecycle events
 
 ## Deploying this code
-1. Create a file named env.yaml as below, and fillout respective values
-
-    ```yaml
-    defaultDnsHostProject: 
-    defaultDnsZone: 
-    defaultDnsDomain: 
-    defaultPTRZone: 
-    defaultPTRHostProject: 
+0. clone this repo to your workspace 
+    ``` 
+    git clone https://github.com/vponnam/vm-event-based-dns-management.git && cd vm-event-based-dns-management
     ```
 
-    Example:
+1. Update the env.yaml as below with the appropriate values
 
+    Example:
     ```yaml
     defaultDnsHostProject: "prj-c-dnshub-3251"
     defaultDnsZone: "private-domain-zone-name"
@@ -22,8 +18,15 @@ Automatically manage DNS records based on your GCE VM lifecycle events
     defaultPTRHostProject: "prj-c-dnshub-3251"
     ```
 
+2. Update the dns_allow_list.yaml file with valid details
+    
+    Example:  
+    ```yaml
+    prj-dev-4328: "^(devserver|qa).*$"
+    ```
+    Above regex "^(devserver|qa).*$" will allow hostnames that starts with `devserver*`  or `qa*` for `prj-dev-4328` project. This explicit allow_list functionality is present to allow DNS/Network team to have control(also audit) on the hostnames allowed in a given project, and to avoid situations where arbitary DNS requests are being made across projects that could collide.
 
-2. gcloud command to deploy your Cloud Function
+3. gcloud command to deploy your Cloud Function
 
     gcloud functions deploy {Name} \
         --trigger-topic={PubSub topic}\
@@ -35,8 +38,8 @@ Automatically manage DNS records based on your GCE VM lifecycle events
 
     Example:  
     ```
-    gcloud functions deploy PubSubMsgReader \
-        --trigger-topic=gce-vm-create-events-topic \
+    gcloud functions deploy gceDnsManager \
+        --trigger-topic=gce-vm-events-topic \
         --retry \
         --region=us-central1 \
         --runtime=go113 \

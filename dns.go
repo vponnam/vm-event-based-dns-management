@@ -1,4 +1,4 @@
-package gcedns
+package main
 
 import (
 	"bytes"
@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -15,6 +16,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"gopkg.in/yaml.v3"
 
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/dns/v1"
@@ -45,13 +48,6 @@ var (
 	defaultPTRDomain      = os.Getenv("defaultPTRDomain")
 	defaultPTRZone        = os.Getenv("defaultPTRZone")
 	defaultPTRHostProject = os.Getenv("defaultPTRHostProject")
-
-	// defaultDnsHostProject = "vponnam-ground0"
-	// defaultDnsZone        = "on-prem-zone"
-	// defaultDnsDomain      = "dc01.internal."
-	// defaultPTRDomain      = "in-addr.arpa."
-	// defaultPTRZone        = "on-prem-ptr"
-	// defaultPTRHostProject = "vponnam-ground0"
 )
 
 // func dnsManagement(action string, dns_host_name string, ips []string) (status bool) {
@@ -75,7 +71,7 @@ func dnsManagement(dnsInfo DnsInfo) (status bool) {
 		fmt.Printf("dnsInfo: %v\n", dnsInfo)
 	}
 
-	// Default wildcard PTRDomain. Zone covering *.in-addr.arpa. domain should pre-exist.
+	// Default wildcard PTRDomain. DNS Zone covering *.in-addr.arpa. domain should pre-exist.
 	if defaultPTRDomain == "" {
 		defaultPTRDomain = "in-addr.arpa."
 	}
@@ -395,19 +391,22 @@ func dnsChange(recordHostProject, recordZone string, dnsChange *dns.Change) (sta
 	return true
 }
 
-/* Allow list entries
-For enterprise scale of implementation, this can be managed in a persistent database
-*/
 func checkAllowList(dnsFQDN_Requested, vmProjectID string) bool {
+	// Read the allowed dns list from local yaml file
+	allowListData, err := ioutil.ReadFile("dns_allow_list.yaml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	allow_list := make(map[string]string)
 
-	allow_list := map[string]string{
-		"vponnam-ground0": "^(sample|instance-group).*$",
+	if err := yaml.Unmarshal(allowListData, &allow_list); err != nil {
+		log.Fatal(err)
 	}
 
 	if allow_list[vmProjectID] == "" {
 		return false
 	} else {
-		vp_r, _ := regexp.Compile(allow_list[vmProjectID])
-		return vp_r.MatchString(dnsFQDN_Requested)
+		prj_allow, _ := regexp.Compile(allow_list[vmProjectID])
+		return prj_allow.MatchString(dnsFQDN_Requested)
 	}
 }
