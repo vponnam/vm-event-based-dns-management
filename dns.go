@@ -48,13 +48,6 @@ var (
 	defaultPTRDomain      = os.Getenv("defaultPTRDomain")
 	defaultPTRZone        = os.Getenv("defaultPTRZone")
 	defaultPTRHostProject = os.Getenv("defaultPTRHostProject")
-
-	// defaultDnsHostProject = "vponnam-ground0"
-	// defaultDnsZone        = "on-prem-zone"
-	// defaultDnsDomain      = "dc01.internal."
-	// defaultPTRDomain      = "in-addr.arpa."
-	// defaultPTRZone        = "on-prem-ptr"
-	// defaultPTRHostProject = "vponnam-ground0"
 )
 
 // func dnsManagement(action string, dns_host_name string, ips []string) (status bool) {
@@ -411,23 +404,6 @@ func dnsChange(recordHostProject, recordZone string, dnsChange *dns.Change) (sta
 	}
 	return true
 }
-
-/* Allow list entries
-For enterprise scale of implementation, this can be managed in a persistent database
-*/
-// func checkAllowList(dnsFQDN_Requested, vmProjectID string) bool {
-
-// 	allow_list := map[string]string{
-// 		"vponnam-ground0": "^(sample|instance-group).*$",
-// 	}
-
-// 	if allow_list[vmProjectID] == "" {
-// 		return false
-// 	} else {
-// 		vp_r, _ := regexp.Compile(allow_list[vmProjectID])
-// 		return vp_r.MatchString(dnsFQDN_Requested)
-// 	}
-// }
 
 func checkAllowList(dnsFQDN_Requested, vmProjectID string) bool {
 	// Read the allowed dns list from local yaml file
