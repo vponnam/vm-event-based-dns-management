@@ -7,6 +7,7 @@ import (
 	"log"
 	"sync"
 
+	"golang.org/x/oauth2/google"
 	"google.golang.org/api/compute/v1"
 )
 
@@ -35,13 +36,13 @@ func getGCEMetadata(data []byte, ctx context.Context) (vm_info VMInfo, status bo
 		return VMInfo{}, false
 	}
 
-	// client, err := google.DefaultClient(ctx, compute.ComputeScope)
-	// if err != nil {
-	// 	checkErr("failed initializing the comoute client", err)
-	// }
+	client, err := google.DefaultClient(ctx, compute.ComputeScope)
+	if err != nil {
+		checkErr("failed initializing the comoute client", err)
+	}
 
-	// compute, err := compute.New(client)
-	compute, err := compute.NewService(ctx)
+	compute, err := compute.New(client)
+	// compute, err := compute.NewService(ctx)
 	if err != nil {
 		checkErr("Error instantiating compute client", err)
 	}
@@ -49,6 +50,10 @@ func getGCEMetadata(data []byte, ctx context.Context) (vm_info VMInfo, status bo
 	if logMessage.Resource.Labels.ProjectID == "" || logMessage.Resource.Labels.Zone == "" || logMessage.Resource.Labels.InstanceID == "" {
 		// fmt.Printf("Missing VM info, returning..\n ProjectID: %q, Zone: %q, InstanceID: %q\n", logMessage.Resource.Labels.ProjectID, logMessage.Resource.Labels.Zone, logMessage.Resource.Labels.InstanceID)
 		return VMInfo{}, false
+	}
+
+	if debug != "" {
+		fmt.Printf("VM Info request parameters:\nProjectID: %v, Zone: %v, InstanceID: %v\n", logMessage.Resource.Labels.ProjectID, logMessage.Resource.Labels.Zone, logMessage.Resource.Labels.InstanceID)
 	}
 
 	gce := compute.Instances.Get(logMessage.Resource.Labels.ProjectID, logMessage.Resource.Labels.Zone, logMessage.Resource.Labels.InstanceID)

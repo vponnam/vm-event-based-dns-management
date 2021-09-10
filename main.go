@@ -222,6 +222,10 @@ func gceEventCheckOperation(data []byte, ctx context.Context) (result string, er
 	logMessage := logMetadata{}
 	json.Unmarshal(data, &logMessage)
 
+	if debug != "" {
+		fmt.Printf("gceEventCheckOperation received data: %v\n", string(data))
+	}
+
 	// Variables used in downstream code
 	vm_info, receivedVMData := getGCEMetadata(data, ctx)
 

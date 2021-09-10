@@ -1,4 +1,4 @@
-env-lab*.yaml
+*lab*.yaml
 deploy.sh
 
 # OSX leaves these everywhere on SMB shares

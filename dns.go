@@ -48,6 +48,13 @@ var (
 	defaultPTRDomain      = os.Getenv("defaultPTRDomain")
 	defaultPTRZone        = os.Getenv("defaultPTRZone")
 	defaultPTRHostProject = os.Getenv("defaultPTRHostProject")
+
+	// defaultDnsHostProject = "vponnam-ground0"
+	// defaultDnsZone        = "on-prem-zone"
+	// defaultDnsDomain      = "dc01.internal."
+	// defaultPTRDomain      = "in-addr.arpa."
+	// defaultPTRZone        = "on-prem-ptr"
+	// defaultPTRHostProject = "vponnam-ground0"
 )
 
 // func dnsManagement(action string, dns_host_name string, ips []string) (status bool) {
@@ -107,6 +114,12 @@ func dnsManagement(dnsInfo DnsInfo) (status bool) {
 		ptrZone = defaultPTRZone
 	}
 
+	if debug != "" {
+		fmt.Printf("dnsInfo: %v\n", dnsInfo)
+		fmt.Printf("default values:\ndefaultDnsHostProject: %v",
+			defaultDnsHostProject)
+	}
+
 	ips = dnsInfo.IPs
 	action = dnsInfo.Action
 
@@ -161,6 +174,10 @@ func dnsManagement(dnsInfo DnsInfo) (status bool) {
 			if patch_check {
 				// check if hostname exist - TDB.
 				// If exists patch an existing record - TBD.
+				if debug != "" {
+					fmt.Printf("DNS recordset info\ndnsHostProject: %v\t, dnsZone: %v\t, host: %v\n", dnsHostProject, dnsZone, dns_host_name+"."+dnsDomain)
+				}
+
 				recordSetName, err := dnsService.ResourceRecordSets.List(dnsHostProject, dnsZone).Name(dns_host_name + "." + dnsDomain).Do()
 				if err != nil {
 					checkErr("Error listing RecordSets: ", err)
@@ -213,6 +230,10 @@ func dnsManagement(dnsInfo DnsInfo) (status bool) {
 			if patch_check {
 				// check if hostname exist - TDB.
 				// If exists patch an existing record - TBD.
+				if debug != "" {
+					fmt.Printf("DNS recordset info\ndnsHostProject: %v\t, dnsZone: %v\t, host: %v\n", dnsHostProject, dnsZone, dns_host_name+"."+dnsDomain)
+				}
+
 				recordSetName, err := dnsService.ResourceRecordSets.List(dnsHostProject, dnsZone).Name(dns_host_name + "." + dnsDomain).Do()
 				if err != nil {
 					checkErr("Error listing RecordSets: ", err)
@@ -391,9 +412,26 @@ func dnsChange(recordHostProject, recordZone string, dnsChange *dns.Change) (sta
 	return true
 }
 
+/* Allow list entries
+For enterprise scale of implementation, this can be managed in a persistent database
+*/
+// func checkAllowList(dnsFQDN_Requested, vmProjectID string) bool {
+
+// 	allow_list := map[string]string{
+// 		"vponnam-ground0": "^(sample|instance-group).*$",
+// 	}
+
+// 	if allow_list[vmProjectID] == "" {
+// 		return false
+// 	} else {
+// 		vp_r, _ := regexp.Compile(allow_list[vmProjectID])
+// 		return vp_r.MatchString(dnsFQDN_Requested)
+// 	}
+// }
+
 func checkAllowList(dnsFQDN_Requested, vmProjectID string) bool {
 	// Read the allowed dns list from local yaml file
-	allowListData, err := ioutil.ReadFile("dns_allow_list.yaml")
+	allowListData, err := ioutil.ReadFile("./serverless_function_source_code/dns_allow_list.yaml")
 	if err != nil {
 		log.Fatal(err)
 	}
