@@ -186,6 +186,10 @@ func checkErr(msg string, err error) {
 // }
 
 func PubSubMsgReader(ctx context.Context, m PubSubMessage) error {
+	var mutex sync.Mutex
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	logMessage := logMetadata{}
 	json.Unmarshal(m.Data, &logMessage)
 
@@ -228,6 +232,17 @@ func gceEventCheckOperation(data []byte, ctx context.Context) (result string, er
 
 	// Variables used in downstream code
 	vm_info, receivedVMData := getGCEMetadata(data, ctx)
+
+	if debug != "" {
+		fmt.Printf("vm_info: %v\n", vm_info)
+		fmt.Printf("IP in request: %v, count: %d\n", vm_info.IPs, len(vm_info.IPs))
+	}
+
+	// retry in case of delay in nic0 assigment
+	if len(vm_info.IPs) == 0 {
+		time.Sleep(5 * time.Second) //consider adding an exponential backoff or check if assetAPI is more reliable.
+		vm_info, receivedVMData = getGCEMetadata(data, ctx)
+	}
 
 	if !receivedVMData {
 		log.Println("No VM info received. " + logMessage.ProtoPayload.ResourceName)

@@ -399,6 +399,7 @@ func dnsChange(recordHostProject, recordZone string, dnsChange *dns.Change) (sta
 
 	_, err = dnsService.Changes.Create(recordHostProject, recordZone, dnsChange).Context(ctx).Do()
 	if err != nil {
+		fmt.Printf("DNS change request metadata. recordHostProject: %v, recordZone: %v, dnsChange: %v\n", recordHostProject, recordZone, dnsChange)
 		checkErr("Error making DNS change: ", err)
 		return false
 	}
