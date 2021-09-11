@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/compute/v1"
@@ -21,6 +22,7 @@ type VMInfo struct {
 // call GCE for explicitly retriving any VM metadata
 // return - vmlabels map[string]string, vmips []string
 func getGCEMetadata(data []byte, ctx context.Context) (vm_info VMInfo, status bool) {
+	time.Sleep(5 * time.Second) //adding a little sleep as nic assigment sometimes takes longer.
 	var mutex sync.Mutex
 	mutex.Lock()
 	defer mutex.Unlock()
