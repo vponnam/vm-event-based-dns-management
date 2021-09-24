@@ -2,9 +2,9 @@
 
 set -eo pipefail
 
-# Variables
-PROJECT_ID="UPDATEME" #Project where Cloud Function gets deployed
-ORG_ID="UPDATEME" #gcloud organizations list --format='value(ID)'
+# Set as environment variables
+PROJECT_ID=$DNS_PROJECT_ID #Project where Cloud Function gets deployed
+ORG_ID=$GCP_ORG_ID #gcloud organizations list --format='value(ID)'
 
 PUBSUB_TOPIC="pb-gce-vm-events-topic"
 LOG_SINK_NAME="sk-gce-vm-events"
@@ -106,6 +106,9 @@ SA_FQDN="${DNS_SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
 # Deployment steps
 case "$1" in 
   deploy)
+    [ -z $DNS_PROJECT_ID ] && echo "Please export DNS_PROJECT_ID as env variable" && exit 1 || echo "Found DNS_PROJECT_ID as an env variable"
+    [ -z $GCP_ORG_ID ] && echo "Please export GCP_ORG_ID as env variable" && exit 1 || echo "Found GCP_ORG_ID as an env variable"
+
     echo "enablling API.."; 1_enable_apis
     echo "Creating pubsub topic.."; 2_create_pubsub_topic
     echo "Creating logsink.."; 3_create_logsink
@@ -114,6 +117,9 @@ case "$1" in
     echo "Deploying Cloud Function.."; 6_deploy_cloud_function
   ;;
   delete)
+    [ -z $DNS_PROJECT_ID ] && echo "Please export DNS_PROJECT_ID as env variable" && exit 1 || echo "Found DNS_PROJECT_ID as an env variable"
+    [ -z $GCP_ORG_ID ] && echo "Please export GCP_ORG_ID as env variable" && exit 1 || echo "Found GCP_ORG_ID as an env variable"
+    
     echo "Deleting Cloud Function"; 7_delete_cloud_function
     echo "Removing PubSub IAM"; 8_delete_pubsub_iam
     echo "Deleting LogSink"; 9_delete_log_sink

@@ -37,7 +37,18 @@ Or below granular IAM roles:
     Above regex "^(devserver|qa).*$" will allow hostnames that starts with `devserver*`  or `qa*` for `prj-dev-4328` project. This explicit allow_list functionality is present to allow DNS/Network team to have control(also audit) on the hostnames allowed in a given project, and to avoid situations where arbitary DNS requests are being made across projects that could collide.
 
 3. Deploying Cloud Function  
-Update `PROJECT_ID` and `ORG_ID` variables in `deploy.sh` and run the below.  
+Export `DNS_PROJECT_ID` and `GCP_ORG_ID` variables locally and run the deploy.sh script.  
+
+    Export variables
+    ```sh
+    export DNS_PROJECT_ID="PROJECT_ID"
+    export GCP_ORG_ID=$(gcloud organizations list --format='value(ID)') 
+    ``` 
+    or if the user account has access to multiple organizations, explicitly provide the org_id as below   
+    ```sh
+    export GCP_ORG_ID="ORG_ID"
+    ```
+
     #### Deploy
     ```sh
     ./deploy.sh deploy
@@ -57,3 +68,41 @@ Update `PROJECT_ID` and `ORG_ID` variables in `deploy.sh` and run the below.
     ./deploy.sh delete
     ```
 
+## Testing this code in action
+
+### DNS Allow list
+Add the valid `project_id` and allowed domains as mentioned in deployment [step2](https://github.com/vponnam/vm-event-based-dns-management#deploying-this-code)
+
+### Deploying through MIG
+Launch a MIG with the optional VM labels or with defaults. 
+
+### VM deploy with labels
+Example gcloud command to deploy a VM with `dns_host_name` label set: below will create a DNS A record in the given zone/domain with dev01 as the hostname as long as dev01 is allowed for the project as an authorized domain in `dns_allow_list.yaml` file
+
+```sh
+gcloud beta compute --project=${ProjectID} instances create ${VMName} \ 
+--zone=${zone} \
+--machine-type=e2-micro \
+--subnet=${Subnet} \
+--no-address \
+--no-restart-on-failure --maintenance-policy=TERMINATE --preemptible \
+--no-service-account --no-scopes --image=debian-10-buster-v20210721 \
+--image-project=debian-cloud --boot-disk-size=10GB --boot-disk-type=pd-balanced --boot-disk-device-name=disk-01 \
+--shielded-secure-boot --shielded-vtpm \
+--shielded-integrity-monitoring \
+--labels=dns_host_name=dev01
+```
+
+### VM deploy with dns_skip_record label
+Example gcloud command to deploy a VM with `dns_skip_record` label set, which will not create any DNS records(including A record).
+
+```sh
+gcloud beta compute --project=${ProjectID} instances create ${VMName} \ 
+--zone=${zone} --machine-type=e2-micro --subnet=${Subnet} --no-address \
+--no-restart-on-failure --maintenance-policy=TERMINATE --preemptible \
+--no-service-account --no-scopes --image=debian-10-buster-v20210721 \
+--image-project=debian-cloud --boot-disk-size=10GB --boot-disk-type=pd-balanced --boot-disk-device-name=disk-01 \
+--shielded-secure-boot --shielded-vtpm \
+--shielded-integrity-monitoring \
+--labels=dns_skip_record
+```
